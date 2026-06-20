@@ -1,4 +1,6 @@
 import os
+import sys
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 import numpy as np
 import pandas as pd
 import streamlit as st
@@ -11,6 +13,15 @@ import time
 import recommendation_engine
 importlib.reload(recommendation_engine)
 from recommendation_engine import TDSPGraph, PolicySimulator, ManpowerOptimizer, InfrastructureOptimizer, CORRIDORS, CORRIDOR_LENGTHS, coords, N, corridor_to_idx, build_dynamic_adjacency_matrix, HQ_CORRIDOR
+
+import script.inference_api
+importlib.reload(script.inference_api)
+from script.inference_api import LiveInferenceAPI
+from script.live_traffic_api import LiveTrafficStream
+import script.traffic_metrics
+importlib.reload(script.traffic_metrics)
+from script.traffic_metrics import TrafficMetrics
+from script.anomaly_detector import AnomalyDetector
 
 
 # Page Config
@@ -527,18 +538,6 @@ with st.sidebar.expander("🧭 Route Planner", expanded=False):
     destination = st.selectbox("Destination", CORRIDORS, index=10)
     start_idx = corridor_to_idx[origin]
     target_idx = corridor_to_idx[destination]
-
-# Load AI Engines
-import sys
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-import script.inference_api
-importlib.reload(script.inference_api)
-from script.inference_api import LiveInferenceAPI
-from script.live_traffic_api import LiveTrafficStream
-import script.traffic_metrics
-importlib.reload(script.traffic_metrics)
-from script.traffic_metrics import TrafficMetrics
-from script.anomaly_detector import AnomalyDetector
 
 @st.cache_resource
 def load_ai_models_v2():
@@ -1244,7 +1243,7 @@ with tab1:
                 os.makedirs("database", exist_ok=True)
                 with open("database/historical_events.json", "r") as f:
                     hist = json.load(f)
-            except:
+            except (FileNotFoundError, json.JSONDecodeError):
                 hist = []
             hist.append(new_event)
             with open("database/historical_events.json", "w") as f:
@@ -1266,7 +1265,7 @@ with tab2:
     try:
         with open("database/historical_events.json", "r") as f:
             hist_events = json.load(f)
-    except:
+    except (FileNotFoundError, json.JSONDecodeError):
         hist_events = []
         
     if not hist_events:
