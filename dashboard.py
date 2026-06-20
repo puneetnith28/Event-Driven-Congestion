@@ -18,27 +18,35 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Zero-Gravity CSS Theme Styling
-st.markdown("""
+# ----------------- SESSION STATE & INITIALIZATION -----------------
+if 'theme' not in st.session_state:
+    st.session_state.theme = 'dark'
+
+def toggle_theme():
+    st.session_state.theme = 'light' if st.session_state.theme == 'dark' else 'dark'
+
+# Theme CSS
+DARK_THEME_CSS = """
 <style>
-    .reportview-container {
-        background: #0b0f19;
-    }
+    .reportview-container { background: #0b0f19; }
+    .main { background: #0b0f19; }
+    .stApp { background-color: #0b0f19; color: #f8fafc; }
     .metric-card {
         background: rgba(30, 41, 59, 0.7);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
         border: 1px solid rgba(255, 255, 255, 0.1);
         padding: 20px;
         border-radius: 15px;
         box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
         text-align: center;
         margin-bottom: 20px;
-        transition: transform 0.2s ease-in-out;
+        transition: transform 0.2s ease-in-out, border 0.2s;
     }
     .metric-card:hover {
         transform: translateY(-5px);
-        border: 1px solid rgba(0, 191, 255, 0.5);
+        border: 1px solid rgba(0, 191, 255, 0.6);
+        box-shadow: 0 12px 40px 0 rgba(0, 191, 255, 0.2);
     }
     .metric-title {
         color: #94a3b8;
@@ -52,21 +60,76 @@ st.markdown("""
         color: #f8fafc;
         font-size: 32px;
         font-weight: 800;
-        text-shadow: 0 0 10px rgba(255,255,255,0.1);
+        text-shadow: 0 0 10px rgba(255,255,255,0.15);
     }
     .delta-positive {
         color: #00ffaa !important;
-        text-shadow: 0 0 10px rgba(0,255,170,0.3);
+        text-shadow: 0 0 10px rgba(0,255,170,0.4);
     }
     .delta-negative {
         color: #ff3366 !important;
-        text-shadow: 0 0 10px rgba(255,51,102,0.3);
+        text-shadow: 0 0 10px rgba(255,51,102,0.4);
+    }
+    h1, h2, h3, h4 { color: #f8fafc; }
+    div[data-testid="stSidebar"] {
+        background-color: rgba(15, 23, 42, 0.95);
+        border-right: 1px solid rgba(255,255,255,0.1);
     }
 </style>
-""", unsafe_allow_html=True)
+"""
 
+LIGHT_THEME_CSS = """
+<style>
+    .reportview-container { background: #f0f4f8; }
+    .main { background: #f0f4f8; }
+    .stApp { background-color: #f0f4f8; color: #1e293b; }
+    .metric-card {
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        padding: 20px;
+        border-radius: 15px;
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+        text-align: center;
+        margin-bottom: 20px;
+        transition: transform 0.2s ease-in-out, border 0.2s;
+    }
+    .metric-card:hover {
+        transform: translateY(-5px);
+        border: 1px solid rgba(0, 118, 255, 0.4);
+        box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.15);
+    }
+    .metric-title {
+        color: #64748b;
+        font-size: 14px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 8px;
+    }
+    .metric-value {
+        color: #0f172a;
+        font-size: 32px;
+        font-weight: 800;
+    }
+    .delta-positive {
+        color: #10b981 !important;
+        text-shadow: 0 0 5px rgba(16,185,129,0.2);
+    }
+    .delta-negative {
+        color: #ef4444 !important;
+        text-shadow: 0 0 5px rgba(239,68,68,0.2);
+    }
+    h1, h2, h3, h4, h5, h6, p, .stMarkdown, .stText { color: #0f172a !important; }
+    div[data-testid="stSidebar"] {
+        background-color: rgba(248, 250, 252, 0.95);
+        border-right: 1px solid rgba(0,0,0,0.05);
+    }
+</style>
+"""
 
-# ----------------- SESSION STATE & INITIALIZATION -----------------
+st.markdown(DARK_THEME_CSS if st.session_state.theme == 'dark' else LIGHT_THEME_CSS, unsafe_allow_html=True)
 if 'scenario_events' not in st.session_state:
     st.session_state.scenario_events = []
 
@@ -92,6 +155,9 @@ st.write("Refactoring spatial-temporal traffic pipelines with dynamic graph topo
 
 # ----------------- SIDEBAR CONTROLS -----------------
 st.sidebar.title("🕹️ Mission Control Toolkit")
+
+theme_icon = "🌞" if st.session_state.theme == "dark" else "🌙"
+st.sidebar.button(f"{theme_icon} Switch Theme", on_click=toggle_theme, use_container_width=True)
 
 with st.sidebar.expander("🛠️ Policy Simulator Controls", expanded=True):
     officers = st.slider("👮 Deploy Police Personnel", min_value=0, max_value=50, value=10, step=1)
