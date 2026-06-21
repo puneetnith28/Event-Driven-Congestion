@@ -26,7 +26,7 @@ from script.anomaly_detector import AnomalyDetector
 
 # Page Config
 st.set_page_config(
-    page_title="Flipkart Gridlock 2.0 - Event-Driven Congestion",
+    page_title="TrafficSight AI",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -534,8 +534,9 @@ with st.sidebar.expander("🚨 Anomaly Simulation", expanded=True):
             st.info("Scenario cleared.")
 
 with st.sidebar.expander("🧭 Route Planner", expanded=False):
+    show_routes = st.toggle("Show Diversion Routes", value=False)
     origin = st.selectbox("Origin", CORRIDORS, index=0)
-    destination = st.selectbox("Destination", CORRIDORS, index=10)
+    destination = st.selectbox("Destination", CORRIDORS, index=11)
     start_idx = corridor_to_idx[origin]
     target_idx = corridor_to_idx[destination]
 
@@ -558,7 +559,7 @@ def load_ai_models_v2():
 api, metrics, anomaly_detector = load_ai_models_v2()
 
 if api is None:
-    st.error("""
+    st.markdown("""
     <div style="text-align: center; padding: 2rem;">
         <div style="font-size: 48px; margin-bottom: 1rem;">⚠️</div>
         <div style="font-size: 20px; font-weight: 600; color: #EF4444;">Model Checkpoint Not Found</div>
@@ -772,8 +773,11 @@ with tab1:
         </div>
         """, unsafe_allow_html=True)
 
-    # Calculate diversion routes
-    paths_mit = graph_mit.solve_k_shortest_tdsp(start_idx, target_idx, selected_t * 10.0, speeds_mit, k=3)
+    # Calculate diversion routes if enabled
+    if show_routes:
+        paths_mit = graph_mit.solve_k_shortest_tdsp(start_idx, target_idx, selected_t * 10.0, speeds_mit, k=3)
+    else:
+        paths_mit = []
 
     # Infrastructure plan
     infra_optimizer = InfrastructureOptimizer(A_static)
